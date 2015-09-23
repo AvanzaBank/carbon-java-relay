@@ -106,9 +106,20 @@ public class CarbonConfigReader {
 				.filter(s -> !s.trim().startsWith("#"))
 				.filter(s -> !s.trim().isEmpty())
 				.filter(s -> s.contains("="))
-				.collect(toMap(s -> s.split("=")[0].trim(), s -> s.split("=")[1].trim()));
+				.collect(toMap(this::getKeyFromPropString, this::getValueFromPropString));
 		return m;
-		
+	}
+	
+	private String getKeyFromPropString(String propString) {
+		return propString.split("=")[0].trim();
+	}
+	
+	private String getValueFromPropString(String propString) {
+		String[] split = propString.split("=");
+		if (split.length < 2) {
+			return "";
+		}
+		return split[1].trim();
 	}
 
 
