@@ -34,6 +34,8 @@ carbon-java-relay listens for metrics in line format on both UDP and TCP. The da
 
 * relay-rules or aggregation is not supported.
 
+* Probably more, we have only tested it in our simple setup.
+
 ### Reason for development
 
 We ran a single-host graphite setup where a carbon-relay distributes the load to five carbon-cache instances. We had about 3 million metrics per minute but the graphite-relay dropped about two thirds of the metrics.
