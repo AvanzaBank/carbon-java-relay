@@ -57,7 +57,7 @@ public class TcpReceiver {
 		while (true) {
 			try {
 				Socket accepted = serverSocket.accept();
-				log.debug("Accepted connection, local port: {}", accepted.getLocalPort());
+				log.info("Accepted connection from {}:{}", accepted.getInetAddress(), accepted.getPort());
 				SocketReader reader = new SocketReader(accepted, consumer);
 				executor.execute(reader);
 			} catch (Exception e) {
@@ -100,7 +100,7 @@ public class TcpReceiver {
 				log.debug("Received line '{}'", line);
 				consumer.accept(line);
 			}
-			log.info("End of stream for socket on port {}", socket.getLocalPort());
+			log.info("End of stream on connection from {}:{}", socket.getInetAddress(), socket.getPort());
 			closeSocket();
 		}
 
