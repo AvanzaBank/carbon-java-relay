@@ -26,9 +26,9 @@ carbon-java-relay listens for metrics in line format on both UDP and TCP. The da
 
 ### Limitations
 
-* carbon-java-relay does currently not implement the consistent hashing method for routing metrics. Which cache instance that received a metric is random. Hence carbon-java-relay basically only useful in setups where all carbon-cache instances write to the same storage. This also means that if you use graphite-web, it will not often find the metrics in the carbon-cache in-memory caches but will have to read from disk.
+* carbon-java-relay does currently not implement the consistent hashing method for routing metrics. Which cache instance that received a metric is random. Hence carbon-java-relay is basically only useful in setups where all carbon-cache instances write to the same storage. This also means that if you use graphite-web, it will not always find the metrics in the carbon-cache in-memory caches but will have to read from disk.
 
-* Currently one thread per carbon-cache instance is used. This might limit your performance, but from our experience you are probably better off increasing the number of carbon-cache instances if you need more concurrency.
+* Currently one thread per carbon-cache instance is used for sending metrics. This might limit your performance, but from our experience you are probably better off increasing the number of carbon-cache instances if you need more concurrency.
 
 ### Reason for development
 
