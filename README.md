@@ -1,5 +1,3 @@
-## NB: Currently under development, stay tuned for the first release
-
 # carbon-java-relay
 carbon-java-relay is a fast and simple relay for carbon data. It provides a subset of the functionality of carbon-relay from the [Graphite project](https://github.com/graphite-project/).
 
