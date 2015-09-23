@@ -60,8 +60,8 @@ public class TcpReceiver {
 				log.debug("Accepted connection, local port: {}", accepted.getLocalPort());
 				SocketReader reader = new SocketReader(accepted, consumer);
 				executor.execute(reader);
-			} catch (IOException e) {
-				throw new RuntimeException(e);
+			} catch (Exception e) {
+				log.warn("Exception in acceptor thread (it will continue to run)", e);
 			}
 		}
 	};
