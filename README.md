@@ -28,6 +28,8 @@ carbon-java-relay listens for metrics in line format on both UDP and TCP. The da
 
 * Currently one thread per carbon-cache instance is used for sending metrics. This might limit your performance, but from our experience you are probably better off increasing the number of carbon-cache instances if you need more concurrency.
 
+* relay-rules or aggregation is not supported.
+
 ### Reason for development
 
 We ran a single-host graphite setup where a carbon-relay distributes the load to five carbon-cache instances. We had about 3 million metrics per minute but the graphite-relay dropped about two thirds of the metrics.
