@@ -19,6 +19,7 @@ public class CarbonConfigReaderTest {
 		assertThat(config.getUdpListenPort(), equalTo(2003));
 		assertThat(config.getDestinations(), contains(new CarbonEndpoint("127.0.0.1", 2014, "a"), new CarbonEndpoint("127.0.0.1", 2106)));
 		assertThat(config.getLogDir(), equalTo("/var/log/graphite"));
+		assertThat(config.getLineReceiverPort(), equalTo(9999));
 	}
 
 }

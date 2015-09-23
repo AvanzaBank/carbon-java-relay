@@ -33,6 +33,7 @@ import com.avanza.carbon.java.relay.conf.RelayConfig;
 import com.avanza.carbon.java.relay.network.CarbonConnection;
 import com.avanza.carbon.java.relay.network.CarbonEndpoint;
 import com.avanza.carbon.java.relay.network.PacketHandler;
+import com.avanza.carbon.java.relay.network.TcpReceiver;
 import com.avanza.carbon.java.relay.network.UdpReceiver;
 import com.avanza.carbon.java.relay.network.Worker;
 import com.avanza.carbon.java.relay.selfmetrics.SelfMonitoring;
@@ -67,8 +68,10 @@ public class RelayServer {
 		BlockingQueue<String> queue = new ArrayBlockingQueue<>(QUEUE_SIZE);
 		PacketHandler packetHandler = new PacketHandler(queue);
 		UdpReceiver udpReceiver = new UdpReceiver(config.getUdpListenPort(), s -> packetHandler.handlePacket(s));
+		TcpReceiver tcpReceiver = new TcpReceiver(config.getLineReceiverPort(), s -> packetHandler.handlePacket(s));
 		List<Worker> workers = createWorkers(config, queue);
 		udpReceiver.start();
+		tcpReceiver.start();
 		workers.stream().forEach(worker -> workerExecutor.execute(worker));
 		new SelfMonitoring(packetHandler, workers).start();
 	}

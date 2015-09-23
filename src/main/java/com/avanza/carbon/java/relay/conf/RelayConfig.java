@@ -29,10 +29,12 @@ public class RelayConfig {
 	private final int udpListenPort;
 	private final List<CarbonEndpoint> endpoints;
 	private final String logDir;
+	private int lineReceiverPort;
 
 
-	public RelayConfig(int udpListenPort, List<CarbonEndpoint> endpoints, String logDir) {
+	public RelayConfig(int udpListenPort, int lineReceiverPort, List<CarbonEndpoint> endpoints, String logDir) {
 		this.udpListenPort = udpListenPort;
+		this.lineReceiverPort = lineReceiverPort;
 		this.logDir = Objects.requireNonNull(logDir);
 		this.endpoints = Collections.unmodifiableList(new ArrayList<>(Objects.requireNonNull(endpoints)));
 	}
@@ -47,6 +49,10 @@ public class RelayConfig {
 
 	public String getLogDir() {
 		return logDir;
+	}
+
+	public int getLineReceiverPort() {
+		return lineReceiverPort;
 	}
 
 }

@@ -42,6 +42,7 @@ public class CarbonConfigReader {
 		String contents = convertStreamToString(inputStream);
 		Map<String, String> relayProperties = getSectionProperties("relay", contents);
 		int udpListenPort = getUdpListenPort(relayProperties);
+		int tcpListenPort = getTcpListenPort(relayProperties);
 		List<CarbonEndpoint> endpoints = getEndpoints(relayProperties);
 		Map<String, String> cacheProperties = getSectionProperties("cache", contents);
 		String logDir = getWithFallback(relayProperties, cacheProperties, "LOG_DIR");
@@ -49,7 +50,7 @@ public class CarbonConfigReader {
 			System.err.println("LOG_DIR not set, will use cwd");
 			logDir = ".";
 		}
-		return new RelayConfig(udpListenPort, endpoints, logDir);
+		return new RelayConfig(udpListenPort, tcpListenPort, endpoints, logDir);
 	}
 
 
@@ -76,9 +77,16 @@ public class CarbonConfigReader {
 
 
 	private int getUdpListenPort(Map<String, String> relayProperties) {
-		String udpListenPortString = getRequiredPropety(relayProperties, "UDP_RECEIVER_PORT");
-		int udpListenPort = Integer.parseInt(udpListenPortString);
-		return udpListenPort;
+		return getIntProperty(relayProperties, "UDP_RECEIVER_PORT");
+	}
+	
+	private int getTcpListenPort(Map<String, String> relayProperties) {
+		return getIntProperty(relayProperties, "LINE_RECEIVER_PORT");
+	}
+
+	private int getIntProperty(Map<String, String> props, String key) {
+		String stringValue = getRequiredPropety(props, key);
+		return Integer.parseInt(stringValue);
 	}
 
 	
