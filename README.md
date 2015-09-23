@@ -18,6 +18,10 @@ Download one of the releases and start the application using `java -jar`:
 
 Standard build using maven, run `mvn package`. An executable jar will be created with classifier `executable`.
 
+### Requirements
+
+Requires Java 8.
+
 ### Functionality
 
 carbon-java-relay listens for metrics in line format on both UDP and TCP. The data is sent using the pickle format to a number of carbon-cache instances.
