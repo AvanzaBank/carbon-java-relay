@@ -50,6 +50,7 @@ public class TcpReceiver {
 			throw new RuntimeException(e);
 		}
 		this.port = serverSocket.getLocalPort();
+		log.info("Listening on port {}", port);
 	}
 
 	private Runnable acceptor = () -> {

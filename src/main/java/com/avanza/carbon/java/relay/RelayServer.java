@@ -45,7 +45,7 @@ import com.avanza.carbon.java.relay.util.NamedThreadFactory;
  */
 public class RelayServer {
 
-	private static final int QUEUE_SIZE = 1000000;
+	private static final int QUEUE_SIZE = 1_000_000;
 	private final Logger log = LoggerFactory.getLogger(RelayServer.class);
 	ExecutorService workerExecutor = Executors.newCachedThreadPool(new NamedThreadFactory("relay-worker"));
 	private RelayConfig config;
@@ -64,7 +64,7 @@ public class RelayServer {
 	}
 
 	public void start() throws Exception {
-		log.info("Listen port: {}, destinations: {}", config.getUdpListenPort(), config.getDestinations());
+		log.info("Listen ports: UDP: {}, TCP: {}, destinations: {}", new Object[] {config.getUdpListenPort(), config.getLineReceiverPort(), config.getDestinations()});
 		BlockingQueue<String> queue = new ArrayBlockingQueue<>(QUEUE_SIZE);
 		PacketHandler packetHandler = new PacketHandler(queue);
 		UdpReceiver udpReceiver = new UdpReceiver(config.getUdpListenPort(), s -> packetHandler.handlePacket(s));
