@@ -41,7 +41,7 @@ public class SelfMonitoring {
 	}
 	
 	public void start() {
-		executor.scheduleAtFixedRate(this::sendMetrics, 0, 60, TimeUnit.SECONDS);
+		executor.scheduleAtFixedRate(this::sendMetrics, 10, 60, TimeUnit.SECONDS);
 	}
 	
 	public void sendMetrics() {

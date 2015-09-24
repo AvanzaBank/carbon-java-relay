@@ -49,6 +49,8 @@ public class RelayServer {
 	private final Logger log = LoggerFactory.getLogger(RelayServer.class);
 	ExecutorService workerExecutor = Executors.newCachedThreadPool(new NamedThreadFactory("relay-worker"));
 	private RelayConfig config;
+	private UdpReceiver udpReceiver;
+	private TcpReceiver tcpReceiver;
 	
 	public static void main(String args[]) throws Exception {
 		validateArgs(args);
@@ -67,13 +69,21 @@ public class RelayServer {
 		log.info("Listen ports: UDP: {}, TCP: {}, destinations: {}", new Object[] {config.getUdpListenPort(), config.getLineReceiverPort(), config.getDestinations()});
 		BlockingQueue<String> queue = new ArrayBlockingQueue<>(QUEUE_SIZE);
 		PacketHandler packetHandler = new PacketHandler(queue);
-		UdpReceiver udpReceiver = new UdpReceiver(config.getUdpListenPort(), s -> packetHandler.handlePacket(s));
-		TcpReceiver tcpReceiver = new TcpReceiver(config.getLineReceiverPort(), s -> packetHandler.handlePacket(s));
+		udpReceiver = new UdpReceiver(config.getUdpListenPort(), s -> packetHandler.handlePacket(s));
+		tcpReceiver = new TcpReceiver(config.getLineReceiverPort(), s -> packetHandler.handlePacket(s));
 		List<Worker> workers = createWorkers(config, queue);
 		udpReceiver.start();
 		tcpReceiver.start();
 		workers.stream().forEach(worker -> workerExecutor.execute(worker));
 		new SelfMonitoring(packetHandler, workers).start();
+	}
+	
+	public int getTcpPort() {
+		return tcpReceiver.getPort(); 
+	}
+	
+	public int getUdpPort() {
+		return udpReceiver.getPort();
 	}
 
 	private List<Worker> createWorkers(RelayConfig config, BlockingQueue<String> queue) {

@@ -23,9 +23,9 @@ public class MetricTuple {
 	private static final Pattern SPLIT_PATTERN = Pattern.compile("  *");
 	private final String name;
 	private final long timestamp;
-	private final Number value;
+	private final BigDecimal value;
 
-	public MetricTuple(String name, Number value, long timestamp) {
+	public MetricTuple(String name, BigDecimal value, long timestamp) {
 		this.name = Objects.requireNonNull(name);
 		this.timestamp = Objects.requireNonNull(timestamp);
 		this.value = Objects.requireNonNull(value);
@@ -39,7 +39,7 @@ public class MetricTuple {
 		return timestamp;
 	}
 
-	public Number getValue() {
+	public BigDecimal getValue() {
 		return value;
 	}
 
@@ -51,5 +51,39 @@ public class MetricTuple {
 	@Override
 	public String toString() {
 		return String.format("%s %s %s", name, value, timestamp);
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + (int) (timestamp ^ (timestamp >>> 32));
+		result = prime * result + ((value == null) ? 0 : value.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		MetricTuple other = (MetricTuple) obj;
+		if (name == null) {
+			if (other.name != null)
+				return false;
+		} else if (!name.equals(other.name))
+			return false;
+		if (timestamp != other.timestamp)
+			return false;
+		if (value == null) {
+			if (other.value != null)
+				return false;
+		} else if (!value.equals(other.value))
+			return false;
+		return true;
 	}
 }
