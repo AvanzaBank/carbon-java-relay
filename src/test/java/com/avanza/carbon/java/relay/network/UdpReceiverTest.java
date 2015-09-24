@@ -17,10 +17,7 @@ package com.avanza.carbon.java.relay.network;
 
 import static org.hamcrest.Matchers.*;
 
-import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.nio.charset.Charset;
 
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -34,14 +31,12 @@ public class UdpReceiverTest {
 
 	private volatile String receivedPacket = null;
 	private UdpReceiver receiver;
-	InetAddress address;
+	private String address = "127.0.0.1";
 	DatagramSocket clientSocket;
 
 	@Before
 	public void setUp() {
 		try {
-			address = InetAddress.getByName("127.0.0.1");
-			clientSocket = new DatagramSocket();
 			receivedPacket = null;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -51,23 +46,17 @@ public class UdpReceiverTest {
 	@Test
 	public void sentMessageIsReceived() throws Exception {
 		int port = startReceiver();
-		clientSocket.send(createPacket(port, "test 12 12"));
+		NetworkTestUtils.sendUdpMessage(address, port, "test 12 12");
 		assertEventually(equalTo("test 12 12"));
 	}
 	
 	@Test
 	public void twoMessageAreReceived() throws Exception {
 		int port = startReceiver();
-		clientSocket.send(createPacket(port, "test 12 12"));
+		NetworkTestUtils.sendUdpMessage(address, port, "test 12 12");
 		assertEventually(equalTo("test 12 12"));
-		clientSocket.send(createPacket(port, "test1 123 1212"));
+		NetworkTestUtils.sendUdpMessage(address, port, "test1 123 1212");
 		assertEventually(equalTo("test1 123 1212"));
-	}
-
-	private DatagramPacket createPacket(int port, String msg) {
-		byte[] messageBytes = msg.getBytes(Charset.forName("UTF-8"));
-		DatagramPacket sendPacket = new DatagramPacket(messageBytes, messageBytes.length, address, port);
-		return sendPacket;
 	}
 
 	private int startReceiver() {
