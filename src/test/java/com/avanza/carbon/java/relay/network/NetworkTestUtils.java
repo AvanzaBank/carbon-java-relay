@@ -58,6 +58,9 @@ public class NetworkTestUtils {
 	}
 
 
+	/**
+	 * Connects, sends the messages, then disconnects.
+	 */
 	public static void sendTcpMessages(String host, int tcpPort, String ... msgs) {
 		try (Socket socket = new Socket(host, tcpPort)) {
 			Arrays.stream(msgs).forEach(m -> trySendTcpMessage(socket, m));

@@ -15,12 +15,12 @@
  */
 package com.avanza.carbon.java.relay.network;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
@@ -30,8 +30,8 @@ public class LineServer {
 	
 	private ServerSocket ss;
 	Executor executor = Executors.newCachedThreadPool();
-	private StringBuffer stringBuffer = new StringBuffer();
 	private List<SocketReader> socketReaders = new CopyOnWriteArrayList<>();
+	private List<String> receivedLines = new CopyOnWriteArrayList<>();
 	
 	public LineServer() {
 		try {
@@ -47,14 +47,7 @@ public class LineServer {
 	
 	
 	public List<String> getReceivedLines() {
-		String allReceived = stringBuffer.toString();
-		String[] lines = allReceived.split("\n");
-		List<String> l = new ArrayList<>(Arrays.asList(lines));
-		// If the last received does not end with newline it is not complete and should not be included.
-		if (!allReceived.endsWith("\n")) {
-			l.remove(l.size() - 1);
-		}
-		return l;
+		return receivedLines;
 	}
 	
 	public void disconnectAllReaders() {
@@ -100,18 +93,17 @@ public class LineServer {
 		@Override
 		public void run() {
 			try {
-				doIt();
+				readLoop();
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
 		}
 
-		private void doIt() throws IOException {
+		private void readLoop() throws IOException {
 			InputStream is = socket.getInputStream();
-			byte[] buffer = new byte[1024];
-			for (int numRead = 0; numRead != -1; numRead = is.read(buffer, 0, buffer.length)) {
-				String s = new String(buffer, 0, numRead);
-				stringBuffer.append(s);
+			BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+			for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+				receivedLines.add(line);
 			}
 		}
 

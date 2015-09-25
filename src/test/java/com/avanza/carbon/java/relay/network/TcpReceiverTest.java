@@ -17,11 +17,10 @@ package com.avanza.carbon.java.relay.network;
 
 import static org.hamcrest.Matchers.*;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.net.Socket;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -40,51 +39,37 @@ public class TcpReceiverTest {
 	@Test
 	public void receivesOne() throws Exception {
 		TestReceiver receiver = new TestReceiver();
-		try (Socket socket = new Socket("127.0.0.1", receiver.getPort())) {
-			sendLine(socket, "foo");
-			assertEventually(receivedLines(receiver.received, contains("foo")));
-		}
+		NetworkTestUtils.sendTcpMessages("127.0.0.1", receiver.getPort(), "foo\n");
+		assertEventually(receivedLines(receiver.received, contains("foo")));
 	}
 
 	@Test
 	public void receivesMany() throws Exception {
 		TestReceiver receiver = new TestReceiver();
-		try (Socket socket = new Socket("127.0.0.1", receiver.getPort())) {
-			sendLine(socket, "foo");
-			sendLine(socket, "bar");
-			sendLine(socket, "baz");
-			assertEventually(receivedLines(receiver.received, contains("foo", "bar", "baz")));
-		}
+		NetworkTestUtils.sendTcpMessages("127.0.0.1", receiver.getPort(), "foo\n", "bar\n", "baz\n");
+		assertEventually(receivedLines(receiver.received, contains("foo", "bar", "baz")));
 	}
 
 	@Test
-	public void twoConnetionsHandled() throws Exception {
+	public void parallelConnectionsHandled() throws Exception {
+		ExecutorService pool = Executors.newCachedThreadPool();
 		TestReceiver receiver = new TestReceiver();
-		try (Socket socket = new Socket("127.0.0.1", receiver.getPort())) {
-			try (Socket socket2 = new Socket("127.0.0.1", receiver.getPort())) {
-				sendLine(socket, "foo");
-				sendLine(socket2, "bar");
-				assertEventually(receivedLines(receiver.received, containsInAnyOrder("foo", "bar")));
-			}
-		}
+		// We assume enough concurrency so that this creates some parallel connections.
+		pool.execute(() -> NetworkTestUtils.sendTcpMessages("127.0.0.1", receiver.getPort(), "foo\n"));
+		pool.execute(() -> NetworkTestUtils.sendTcpMessages("127.0.0.1", receiver.getPort(), "bar\n"));
+		pool.execute(() -> NetworkTestUtils.sendTcpMessages("127.0.0.1", receiver.getPort(), "baz\n"));
+		pool.execute(() -> NetworkTestUtils.sendTcpMessages("127.0.0.1", receiver.getPort(), "foobar\n"));
+		assertEventually(receivedLines(receiver.received, containsInAnyOrder("foo", "bar", "baz", "foobar")));
+		pool.shutdown();
 	}
 	
 	@Test
 	public void handlesDisconnect() throws Exception {
 		TestReceiver receiver = new TestReceiver();
-		try (Socket socket = new Socket("127.0.0.1", receiver.getPort())) {
-			sendLine(socket, "foo");
-		}
-		try (Socket socket = new Socket("127.0.0.1", receiver.getPort())) {
-			sendLine(socket, "bar");
-		}
+		NetworkTestUtils.sendTcpMessages("127.0.0.1", receiver.getPort(), "foo\n");
+		// NetworkTestUtils disconnects between each call
+		NetworkTestUtils.sendTcpMessages("127.0.0.1", receiver.getPort(), "bar\n");
 		assertEventually(receivedLines(receiver.received, contains("foo", "bar")));
-	}
-
-	private void sendLine(Socket socket, String line) throws IOException {
-		PrintWriter pw = new PrintWriter(socket.getOutputStream());
-		pw.println(line);
-		pw.flush();
 	}
 
 	private void assertEventually(Probe probe) throws InterruptedException {
