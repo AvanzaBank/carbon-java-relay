@@ -18,6 +18,8 @@ package com.avanza.carbon.java.relay.network;
 import static org.hamcrest.Matchers.*;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.hamcrest.Matcher;
 import org.junit.Test;
@@ -62,6 +64,18 @@ public class CarbonConnectionTest {
 		cc.send("bar3\n");
 		assertEventually(receivedLines(server, hasItems("foo", "bar2", "bar3")));
 	}
+	
+	@Test
+	public void connectsLazily() throws Exception {
+		ExecutorService pool = Executors.newCachedThreadPool();
+		int port = NetworkTestUtils.findFreeListeningPort();
+		CarbonConnection cc = new CarbonConnection("127.0.0.1", port, 10);
+		pool.execute(() -> cc.send("foo\n"));
+		LineServer server = new LineServer(port);
+		server.start();
+		assertEventually(receivedLines(server, hasItems("foo")));
+		pool.shutdown();
+	}
 
 	private Probe receivedLines(LineServer server, Matcher<?> matcher) {
 		return new Probe() {
@@ -88,7 +102,7 @@ public class CarbonConnectionTest {
 	}
 
 	private void assertEventually(Probe probe) throws Exception {
-		new Poller(500, 20).check(probe);
+		new Poller(1500, 20).check(probe);
 	}
 
 }

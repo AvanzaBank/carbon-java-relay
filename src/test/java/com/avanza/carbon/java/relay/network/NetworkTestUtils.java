@@ -20,15 +20,20 @@ import java.io.PrintWriter;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.Random;
 
 /**
  * @author Kristoffer Erlandsson
  */
 public class NetworkTestUtils {
+	
+	private static Random random = new Random();
+	private static final int MAX_FIND_PORT_TRIES = 100;
 
 	public static void sendUdpMessages(String host, int port, String ... msgs) {
 		try (DatagramSocket clientSocket = new DatagramSocket()) {
@@ -77,6 +82,27 @@ public class NetworkTestUtils {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-		
+	}
+	
+	/**
+	 * Finds a free port that is possible to bind a server socket on.
+	 * 
+	 * Note that race conditions may occur. There is no guarantee that binding on a port returned by this method will
+	 * succeed.
+	 * 
+	 * Implementation note: We generate a random port number and try to bind to that one instead of using
+	 * ServerSocket(0) since we run less risk of colliding with concurrent running tasks this way.
+	 */
+	public static synchronized int findFreeListeningPort() {
+		for (int i = 0; i < MAX_FIND_PORT_TRIES; i++) {
+			int portNum = random.nextInt(65536 - 1024) + 1024;
+			try {
+				ServerSocket serverSocket = new ServerSocket(portNum);
+				serverSocket.close();
+				return portNum;
+			} catch (IOException e) {
+			}
+		}
+		throw new RuntimeException("Could not find a free server port");
 	}
 }

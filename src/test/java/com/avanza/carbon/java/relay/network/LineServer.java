@@ -33,12 +33,16 @@ public class LineServer {
 	private List<SocketReader> socketReaders = new CopyOnWriteArrayList<>();
 	private List<String> receivedLines = new CopyOnWriteArrayList<>();
 	
-	public LineServer() {
+	public LineServer(int port) {
 		try {
-			ss = new ServerSocket(0);
+			ss = new ServerSocket(port);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+	}
+	
+	public LineServer() {
+		this(0);
 	}
 	
 	public int getPort() {

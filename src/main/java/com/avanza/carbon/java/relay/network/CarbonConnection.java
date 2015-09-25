@@ -17,14 +17,22 @@ package com.avanza.carbon.java.relay.network;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * Connection to a carbon-cache instance. Is responsible for reconnection when a
+ * connection is lost.
+ * 
+ * Currently data is discarded if an error occurs while sending.
+ * 
  * @author Kristoffer Erlandsson
  */
 public class CarbonConnection {
+
+	private static final int RECONNECTION_DELAY = 3000;
 
 	private final Logger log = LoggerFactory.getLogger(CarbonConnection.class);
 
@@ -32,22 +40,38 @@ public class CarbonConnection {
 	private int port;
 	private Socket socket;
 
+	private int reconnectionDelay;
+
 	public CarbonConnection(String host, int port) {
-		this.host = host;
+		this(host, port, RECONNECTION_DELAY);
+	}
+	
+	public CarbonConnection(String host, int port, int reconnectionDelay) {
+		this.host = Objects.requireNonNull(host);
 		this.port = port;
+		if (reconnectionDelay < 0) {
+			throw new IllegalArgumentException("reconnectionDelay must be >= 0");
+		}
+		this.reconnectionDelay = reconnectionDelay;
 	}
 
 	public void send(String msg) {
 		send(new byte[0], msg);
 	}
-	
+
 	public void send(byte[] header, String msg) {
-		// TODO delay before reconnecting to avoid super frequent connects when the connection is down.
-		boolean connected = ensureConnected();
-		while (!connected) {
-			ensureConnected();
+		for (boolean connected = ensureConnected(); !connected; connected = ensureConnected()) {
+			sleep();
 		}
 		doSend(header, msg);
+	}
+
+	private void sleep() {
+		try {
+			Thread.sleep(reconnectionDelay);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+		}
 	}
 
 	private void doSend(byte[] header, String msg) {
@@ -86,5 +110,5 @@ public class CarbonConnection {
 	public String toString() {
 		return "CarbonConnection [host=" + host + ", port=" + port + "]";
 	}
-	
+
 }
