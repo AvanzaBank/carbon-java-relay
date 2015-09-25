@@ -46,16 +46,16 @@ public class UdpReceiverTest {
 	@Test
 	public void sentMessageIsReceived() throws Exception {
 		int port = startReceiver();
-		NetworkTestUtils.sendUdpMessage(address, port, "test 12 12");
+		NetworkTestUtils.sendUdpMessages(address, port, "test 12 12");
 		assertEventually(equalTo("test 12 12"));
 	}
 	
 	@Test
 	public void twoMessageAreReceived() throws Exception {
 		int port = startReceiver();
-		NetworkTestUtils.sendUdpMessage(address, port, "test 12 12");
+		NetworkTestUtils.sendUdpMessages(address, port, "test 12 12");
 		assertEventually(equalTo("test 12 12"));
-		NetworkTestUtils.sendUdpMessage(address, port, "test1 123 1212");
+		NetworkTestUtils.sendUdpMessages(address, port, "test1 123 1212");
 		assertEventually(equalTo("test1 123 1212"));
 	}
 

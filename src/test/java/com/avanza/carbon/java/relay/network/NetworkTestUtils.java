@@ -16,21 +16,37 @@
 package com.avanza.carbon.java.relay.network;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 
+/**
+ * @author Kristoffer Erlandsson
+ */
 public class NetworkTestUtils {
 
-	public static void sendUdpMessage(String host, int port, String msg) {
+	public static void sendUdpMessages(String host, int port, String ... msgs) {
 		try (DatagramSocket clientSocket = new DatagramSocket()) {
-			clientSocket.send(createPacket(host, port, msg));
+			Arrays.stream(msgs).forEach(m -> trySendUdpMessage(host, port, clientSocket, m));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 	}
+
+
+	private static void trySendUdpMessage(String host, int port, DatagramSocket socket, String msg){
+		try {
+			socket.send(createPacket(host, port, msg));
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
 
 	private static DatagramPacket createPacket(String host, int port, String msg) {
 		byte[] messageBytes = msg.getBytes(Charset.forName("UTF-8"));
@@ -39,5 +55,25 @@ public class NetworkTestUtils {
 		} catch (UnknownHostException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+
+	public static void sendTcpMessages(String host, int tcpPort, String ... msgs) {
+		try (Socket socket = new Socket(host, tcpPort)) {
+			Arrays.stream(msgs).forEach(m -> trySendTcpMessage(socket, m));
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	private static void trySendTcpMessage(Socket socket, String msg) {
+		try {
+			PrintWriter pw = new PrintWriter(socket.getOutputStream());
+			pw.print(msg);
+			pw.flush();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		
 	}
 }

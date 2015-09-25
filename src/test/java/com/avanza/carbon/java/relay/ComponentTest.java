@@ -34,39 +34,63 @@ import com.avanza.carbon.java.relay.network.PickleServer;
 import com.avanza.carbon.java.relay.testutil.Poller;
 import com.avanza.carbon.java.relay.testutil.Probe;
 
+/**
+ * Tests for end-to-end interaction.
+ * 
+ * @author Kristoffer Erlandsson
+ */
 public class ComponentTest {
 
 	// TODO better shutdown of stuff, now we just leave threads running and
 	// ports open.
 
+	private static final String LOG_DIR = "target";
 	PickleServer pickleServer;
 	private RelayServer server;
 
 	@Before
-	public void setup() {
+	public void setup() throws Exception {
 		pickleServer = new PickleServer(0);
 		pickleServer.start();
-		server = startServerOnRandomPortWithRetries(pickleServer.getPort());
-		try {
-			server.start();
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+		server = setupServerOnRandomPortWithRetries(pickleServer.getPort());
+		server.start();
 	}
 
 	@Test
 	public void receivesOneUdpMetric() throws Exception {
-		NetworkTestUtils.sendUdpMessage("127.0.0.1", server.getUdpPort(), "foo.bar 3.12 2");
+		NetworkTestUtils.sendUdpMessages("127.0.0.1", server.getUdpPort(), "foo.bar 3.12 2");
 		assertEventually(receivedMetrics(pickleServer, contains(metric("foo.bar", "3.12", 2))));
 	}
 
 	@Test
 	public void receivesManyUdpMetrics() throws Exception {
-		NetworkTestUtils.sendUdpMessage("127.0.0.1", server.getUdpPort(), "foo.bar 3.12 2");
-		NetworkTestUtils.sendUdpMessage("127.0.0.1", server.getUdpPort(), "foo.bar.baz 5.11 4444");
-		NetworkTestUtils.sendUdpMessage("127.0.0.1", server.getUdpPort(), "foo.bar.baz 5.10 444");
+		NetworkTestUtils.sendUdpMessages("127.0.0.1", server.getUdpPort(), "foo.bar 3.12 2", "foo.bar.baz 5.11 4444",
+				"foo.bar.baz 5.10 444");
 		assertEventually(receivedMetrics(pickleServer, containsInAnyOrder(metric("foo.bar", "3.12", 2),
 				metric("foo.bar.baz", "5.11", 4444), metric("foo.bar.baz", "5.10", 444))));
+	}
+
+	@Test
+	public void receivesOneTcpMetric() throws Exception {
+		// Remember, metrics through TCP require a newline at the end
+		NetworkTestUtils.sendTcpMessages("127.0.0.1", server.getTcpPort(), "foo.bar 3.12 2\n");
+		assertEventually(receivedMetrics(pickleServer, contains(metric("foo.bar", "3.12", 2))));
+	}
+
+	@Test
+	public void receivesManyTcpMetrics() throws Exception {
+		NetworkTestUtils.sendTcpMessages("127.0.0.1", server.getTcpPort(), "foo.bar 3.12 2\n", "foo.bar.baz 5.11 4444\n",
+				"foo.bar.baz 5.10 444\n");
+		assertEventually(receivedMetrics(pickleServer, containsInAnyOrder(metric("foo.bar", "3.12", 2),
+				metric("foo.bar.baz", "5.11", 4444), metric("foo.bar.baz", "5.10", 444))));
+	}
+	
+	@Test
+	public void receivesBothTcpAndUdp() throws Exception {
+		NetworkTestUtils.sendUdpMessages("127.0.0.1", server.getUdpPort(), "foo.bar 3.12 2", "foo.bar.baz 5.11 4444");
+		NetworkTestUtils.sendTcpMessages("127.0.0.1", server.getTcpPort(), "bar.foo 3.1415 123123\n", "foo.bar.baz 5.10 444\n");
+		assertEventually(receivedMetrics(pickleServer, containsInAnyOrder(metric("foo.bar", "3.12", 2),
+				metric("foo.bar.baz", "5.11", 4444), metric("bar.foo", "3.1415", 123123), metric("foo.bar.baz", "5.10", 444))));
 	}
 
 	private MetricTuple metric(String key, String value, int timestamp) {
@@ -77,13 +101,13 @@ public class ComponentTest {
 		return new BigDecimal(d);
 	}
 
-	private RelayServer startServerOnRandomPortWithRetries(int serverPort) {
+	private RelayServer setupServerOnRandomPortWithRetries(int serverPort) {
 		Random r = new Random();
 		RuntimeException ex = null;
 		for (int i = 0; i < 10; i++) {
 			int port = r.nextInt(60000) + 5000;
 			RelayConfig config = new RelayConfig(port, port, Arrays.asList(new CarbonEndpoint("127.0.0.1", serverPort)),
-					"target");
+					LOG_DIR);
 			try {
 				return new RelayServer(config);
 			} catch (RuntimeException e) {
