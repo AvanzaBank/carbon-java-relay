@@ -70,6 +70,7 @@ public class CarbonConnectionTest {
 		ExecutorService pool = Executors.newCachedThreadPool();
 		int port = NetworkTestUtils.findFreeListeningPort();
 		CarbonConnection cc = new CarbonConnection("127.0.0.1", port, 10);
+		// Send is blocking so do it on a separate thread.
 		pool.execute(() -> cc.send("foo\n"));
 		LineServer server = new LineServer(port);
 		server.start();
