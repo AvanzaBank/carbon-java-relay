@@ -20,7 +20,7 @@ carbon-java-relay reads the following properties from the configuration file spe
 
 * `UDP_RECEIVER_PORT` - UDP listen port
 * `LINE_RECEIVER_PORT` - TCP listen port
-* `DESTINATIONS` - carbon-cache endpoints to send metrics to. Accepts a comma-separated list with `host:port:instanceId`. `instnaceId` is optional since consistent hashing is not supported.
+* `DESTINATIONS` - carbon-cache endpoints to send metrics to. Accepts a comma-separated list with `host:port:instanceId`. `instnaceId` is optional since consistent hashing is not supported. NB: the endpoints must be pickle endpoints.
 * `LOG_DIR` - directory for logging. A file named `carbon-java-relay.log` will created and logged to. Will be read from the `[cache]` section if it does not exist in the `[relay]` section.
 
 ### Requirements
