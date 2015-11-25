@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
  */
 public class UdpReceiver {
 
+	private static final int RECEIVE_BUFFER_SIZE = 16777216;
 	Logger log = LoggerFactory.getLogger(UdpReceiver.class);
 	
 	private final int port;
@@ -55,8 +56,9 @@ public class UdpReceiver {
 		this.packetConsumer = packetConsumer;
 		try {
 			serverSocket = new DatagramSocket(port);
+			serverSocket.setReceiveBufferSize(RECEIVE_BUFFER_SIZE);
 			this.port = serverSocket.getLocalPort();
-			log.info("Listening on port {}", port);
+			log.info("Listening on port {}, receive buffer size {}", port, serverSocket.getReceiveBufferSize());
 		} catch (SocketException e) {
 			throw new RuntimeException(e);
 		}
